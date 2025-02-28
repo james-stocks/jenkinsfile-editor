@@ -8,7 +8,7 @@ A program for making simple programmatic changes to a [Jenkinsfile](https://www.
 
 - [X] Read in a Jenkinsfile
 - [X] Write back to text
-- [ ] Make this a re-usable module
+- [X] Make this a re-usable module
 - [ ] Insert steps
 - [ ] Delete steps
   - [ ] Delete surrounding stage if left empty

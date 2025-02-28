@@ -3,6 +3,8 @@ package main
 import (
 	"strings"
 	"testing"
+
+	jenkinsfile "github.com/james-stocks/jenkinsfile-editor/pkg"
 )
 
 func TestParseJenkinsfile(t *testing.T) {
@@ -29,7 +31,7 @@ pipeline {
     }
 }
 `
-	pipeline, err := parseJenkinsfile(content)
+	pipeline, err := jenkinsfile.Parse(content)
 	if err != nil {
 		t.Fatalf("Error parsing Jenkinsfile: %v", err)
 	}
@@ -77,7 +79,7 @@ pipeline {
     }
 }
 `
-	pipeline, err := parseJenkinsfile(content)
+	pipeline, err := jenkinsfile.Parse(content)
 	if err != nil {
 		t.Fatalf("Error parsing Jenkinsfile: %v", err)
 	}
@@ -133,12 +135,12 @@ func TestWritePipelineToBuffer(t *testing.T) {
     }
 }
 `
-	pipeline, err := parseJenkinsfile(original)
+	pipeline, err := jenkinsfile.Parse(original)
 	if err != nil {
 		t.Fatalf("Error parsing Jenkinsfile: %v", err)
 	}
 
-	output := writePipelineToBuffer(pipeline)
+	output := pipeline.ToString()
 	if output != original {
 		t.Errorf("Expected output to match original:\n%s\nGot:\n%s", original, output)
 	}
