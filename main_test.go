@@ -110,10 +110,8 @@ pipeline {
 }
 
 func TestWritePipelineToBuffer(t *testing.T) {
-	content := `
-pipeline {
+	original := `pipeline {
     agent any
-
     stages {
         stage('Build') {
             steps {
@@ -135,37 +133,13 @@ pipeline {
     }
 }
 `
-	expectedOutput := `pipeline {
-  agent any
-  stages {
-    stage('Build') {
-      steps {
-        echo 'Building..'
-      }
-    }
-    stage('Test') {
-      steps {
-        echo 'Testing..'
-      }
-    }
-    stage('Deploy') {
-      steps {
-        sh '''
-          echo "Deploying.."
-        '''
-      }
-    }
-  }
-}
-`
-
-	pipeline, err := parseJenkinsfile(content)
+	pipeline, err := parseJenkinsfile(original)
 	if err != nil {
 		t.Fatalf("Error parsing Jenkinsfile: %v", err)
 	}
 
 	output := writePipelineToBuffer(pipeline)
-	if output != expectedOutput {
-		t.Errorf("Expected output:\n%s\nGot:\n%s", expectedOutput, output)
+	if output != original {
+		t.Errorf("Expected output to match original:\n%s\nGot:\n%s", original, output)
 	}
 }

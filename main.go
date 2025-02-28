@@ -153,9 +153,9 @@ func writeElementToBuffer(buffer *bytes.Buffer, e Element, indent string) {
 	}
 	for _, child := range e.Children {
 		if child.Type == "sh-line" {
-			writeElementToBuffer(buffer, child, indent+"    ")
+			writeElementToBuffer(buffer, child, indent+"        ")
 		} else {
-			writeElementToBuffer(buffer, child, indent+"  ")
+			writeElementToBuffer(buffer, child, indent+"    ")
 		}
 	}
 	if e.HasBraces {
