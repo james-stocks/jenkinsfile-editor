@@ -3,6 +3,8 @@ package main
 import (
 	"strings"
 	"testing"
+
+	jenkinsfile "github.com/james-stocks/jenkinsfile-editor/pkg"
 )
 
 func TestParseJenkinsfile(t *testing.T) {
@@ -29,7 +31,7 @@ pipeline {
     }
 }
 `
-	pipeline, err := parseJenkinsfile(content)
+	pipeline, err := jenkinsfile.Parse(content)
 	if err != nil {
 		t.Fatalf("Error parsing Jenkinsfile: %v", err)
 	}
@@ -77,7 +79,7 @@ pipeline {
     }
 }
 `
-	pipeline, err := parseJenkinsfile(content)
+	pipeline, err := jenkinsfile.Parse(content)
 	if err != nil {
 		t.Fatalf("Error parsing Jenkinsfile: %v", err)
 	}
@@ -110,10 +112,8 @@ pipeline {
 }
 
 func TestWritePipelineToBuffer(t *testing.T) {
-	content := `
-pipeline {
+	original := `pipeline {
     agent any
-
     stages {
         stage('Build') {
             steps {
@@ -135,37 +135,13 @@ pipeline {
     }
 }
 `
-	expectedOutput := `pipeline {
-  agent any
-  stages {
-    stage('Build') {
-      steps {
-        echo 'Building..'
-      }
-    }
-    stage('Test') {
-      steps {
-        echo 'Testing..'
-      }
-    }
-    stage('Deploy') {
-      steps {
-        sh '''
-          echo "Deploying.."
-        '''
-      }
-    }
-  }
-}
-`
-
-	pipeline, err := parseJenkinsfile(content)
+	pipeline, err := jenkinsfile.Parse(original)
 	if err != nil {
 		t.Fatalf("Error parsing Jenkinsfile: %v", err)
 	}
 
-	output := writePipelineToBuffer(pipeline)
-	if output != expectedOutput {
-		t.Errorf("Expected output:\n%s\nGot:\n%s", expectedOutput, output)
+	output := pipeline.ToString()
+	if output != original {
+		t.Errorf("Expected output to match original:\n%s\nGot:\n%s", original, output)
 	}
 }
