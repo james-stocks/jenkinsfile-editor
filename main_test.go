@@ -7,11 +7,8 @@ import (
 	jenkinsfile "github.com/james-stocks/jenkinsfile-editor/pkg"
 )
 
-func TestParseJenkinsfile(t *testing.T) {
-	content := `
-pipeline {
+var test_basic_jenkinsfile string = `pipeline {
     agent any
-
     stages {
         stage('Build') {
             steps {
@@ -31,7 +28,9 @@ pipeline {
     }
 }
 `
-	pipeline, err := jenkinsfile.Parse(content)
+
+func TestParseJenkinsfile(t *testing.T) {
+	pipeline, err := jenkinsfile.Parse(test_basic_jenkinsfile)
 	if err != nil {
 		t.Fatalf("Error parsing Jenkinsfile: %v", err)
 	}
@@ -54,8 +53,7 @@ pipeline {
 }
 
 func TestParseShBlock(t *testing.T) {
-	content := `
-pipeline {
+	content := `pipeline {
     agent any
 
     stages {
@@ -77,8 +75,8 @@ pipeline {
             }
         }
     }
-}
-`
+}`
+
 	pipeline, err := jenkinsfile.Parse(content)
 	if err != nil {
 		t.Fatalf("Error parsing Jenkinsfile: %v", err)
@@ -112,7 +110,59 @@ pipeline {
 }
 
 func TestWritePipelineToBuffer(t *testing.T) {
-	original := `pipeline {
+
+	pipeline, err := jenkinsfile.Parse(test_basic_jenkinsfile)
+	if err != nil {
+		t.Fatalf("Error parsing Jenkinsfile: %v", err)
+	}
+
+	output := pipeline.ToString()
+	if output != test_basic_jenkinsfile {
+		t.Errorf("Expected output to match original:\n%s\nGot:\n%s", test_basic_jenkinsfile, output)
+	}
+}
+
+func TestGetStageIndex(t *testing.T) {
+
+	pipeline, err := jenkinsfile.Parse(test_basic_jenkinsfile)
+	if err != nil {
+		t.Fatalf("Error parsing Jenkinsfile: %v", err)
+	}
+
+	stepToFind := "echo 'Testing"
+	index := pipeline.GetStageIndexForStep(stepToFind)
+	if index == -1 {
+		t.Fatalf("Did not find any stage with step matching: %s", stepToFind)
+	}
+
+	if index != 1 {
+		t.Errorf("Expected index 1, got %d", index)
+	}
+}
+
+func TestInsertStage(t *testing.T) {
+	content := `pipeline {
+		agent any
+		stages {
+			stage('Build') {
+				steps {
+					echo 'Building..'
+				}
+			}
+			stage('Test') {
+				steps {
+					echo 'Testing..'
+				}
+			}
+			stage('Old Function') {
+				steps {
+					oldFunction()
+				}
+			}
+		}
+	}`
+
+	expected := `pipeline {
     agent any
     stages {
         stage('Build') {
@@ -125,23 +175,34 @@ func TestWritePipelineToBuffer(t *testing.T) {
                 echo 'Testing..'
             }
         }
-        stage('Deploy') {
+        stage('New Function') {
             steps {
-                sh '''
-                    echo "Deploying.."
-                '''
+                newFunction()
+            }
+        }
+        stage('Old Function') {
+            steps {
+                oldFunction()
             }
         }
     }
 }
 `
-	pipeline, err := jenkinsfile.Parse(original)
+
+	pipeline, err := jenkinsfile.Parse(content)
+
 	if err != nil {
 		t.Fatalf("Error parsing Jenkinsfile: %v", err)
 	}
 
-	output := pipeline.ToString()
-	if output != original {
-		t.Errorf("Expected output to match original:\n%s\nGot:\n%s", original, output)
+	oldIndex := pipeline.GetStageIndexForStep("oldFunction()")
+	if oldIndex == -1 {
+		t.Fatalf("Did not find any stage with step matching: oldFunction()")
+	}
+
+	pipeline.InsertStage("New Function", []string{"newFunction()"}, oldIndex)
+
+	if pipeline.ToString() != expected {
+		t.Errorf("Expected:\n%s\nGot:\n%s", expected, pipeline.ToString())
 	}
 }

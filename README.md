@@ -1,5 +1,7 @@
 # jenkinsfile-editor
 
+![example workflow](https://github.com/james-stocks/jenkinsfile-editor/actions/workflows/ci.yaml/badge.svg)
+
 ## What's this?
 
 A program for making simple programmatic changes to a [Jenkinsfile](https://www.jenkins.io/doc/book/pipeline/jenkinsfile/) without going to the lengths of having a full Groovy AST

@@ -19,6 +19,67 @@ func (p *Pipeline) ToString() string {
 	return buffer.String()
 }
 
+func (p *Pipeline) GetStageIndexForStep(step string) (int) {
+    for _, element := range p.Elements {
+        if element.Name == "pipeline" {
+            for _, pipelineElement := range element.Children {
+                if pipelineElement.Name == "stages" {
+                    for k, stageElement := range pipelineElement.Children {
+                        for _, stageChild := range stageElement.Children {
+							if stageChild.Name == "steps" {
+								for _, stepsElement := range stageChild.Children {
+									if strings.Contains(stepsElement.Content, step) {
+										return k
+									}
+								}
+							}
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return -1
+}
+
+func (p *Pipeline) InsertStage(stageName string, steps []string, index int) {
+	newStage := Element{
+		Type:      "stage",
+		Name:      fmt.Sprintf("stage('%s')", stageName),
+		Content:   "",
+		HasBraces: true,
+	}
+	newSteps := Element{
+		Type:      "steps",
+		Name:      "steps",
+		Content:   "",
+		HasBraces: true,
+	}
+	for _, step := range steps {
+		newStep := Element{
+			Type:    "element",
+			Name:    step,
+			Content: step,
+		}
+		newSteps.Children = append(newSteps.Children, newStep)
+	}
+	newStage.Children = append(newStage.Children, newSteps)
+	// i and j indices are needed to ensure overwriting the original element
+    for i, element := range p.Elements {
+        if element.Name == "pipeline" {
+            for j, pipelineElement := range element.Children {
+                if pipelineElement.Name == "stages" {
+                    newStages := make([]Element, len(pipelineElement.Children)+1)
+                    copy(newStages, pipelineElement.Children[:index])
+                    newStages[index] = newStage
+                    copy(newStages[index+1:], pipelineElement.Children[index:])
+                    p.Elements[i].Children[j].Children = newStages
+                }
+            }
+        }
+    }
+}
+
 // Element represents a generic element in the pipeline
 type Element struct {
 	Type      string
